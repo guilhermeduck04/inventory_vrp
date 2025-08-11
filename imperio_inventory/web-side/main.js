@@ -17,6 +17,7 @@ const Routes = {
         $("#inventory").show()
     },    
     "CLOSE_INVENTORY": async function(payload){
+        $('#context-menu').hide(); // Adicione esta linha
 
         const ignoreRight = payload.ignoreRight || false
         Client("CLOSE_INVENTORY",{
@@ -48,6 +49,40 @@ const Routes = {
         }
     }
 }
+
+$(document).on('click', '.context-menu-option', async function() {
+        if(!globalThis.InternetStatus){
+            Notify("Sem conexão com a internet!","error")
+            return
+        }
+
+        if(!globalThis.SelectedItem || globalThis.SelectedItem.side !== "left") return Notify("Selecione um item do seu inventário primeiro!", "error");
+        let {item, id} = globalThis.SelectedItem;
+        if(!window.classInstances["left"].items[id]) {
+            id = window.classInstances["left"].findSlotByItem(item)
+            if(!id) return Notify("Selecione um item do seu inventário primeiro!", "error");
+        };
+        let inputValue = parseInt($('.input-frame').val()) > 0 ? parseInt($('.input-frame').val()) : globalThis.SelectedItem.amount
+        inputValue = inputValue > globalThis.SelectedItem.amount ? globalThis.SelectedItem.amount : inputValue
+
+        const action = $(this).data("action");
+
+        const response = await Client(action, {slot: id, item: item, amount: inputValue})
+        if(typeof response !== "boolean" && response?.error){
+            Notify(response.error,"error");
+            return
+        }
+        if(!response){
+            return;
+        }
+        if(response){
+            window.classInstances["left"].removeItem(id, response?.used_amount || inputValue)
+            if(action == "USE_ITEM" && (globalThis.Config[item]?.tipo == "equipar" || globalThis.Config[item]?.tipo == "recarregar")){
+                window.classInstances["weapons"] = new Weapons(await Client("GET_WEAPONS"))
+            }
+        }
+        $('#context-menu').hide();
+    });
 
 $(() => {
     window.addEventListener('message', async ({ data }) => {
@@ -81,6 +116,8 @@ $(() => {
 });
 
 function Close(){
+    $('#context-menu').hide(); // Adicione esta linha
+
     Client("CLOSE_INVENTORY",{
         right: window.classInstances.hasOwnProperty("right")
     })

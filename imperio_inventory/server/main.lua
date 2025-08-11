@@ -1238,6 +1238,37 @@ RegisterCommand('revistar', function(source, args)
     end
 end)
 
+RegisterServerEvent("imperio_inventory:useItemFromHotkey")
+AddEventHandler("imperio_inventory:useItemFromHotkey", function(slot)
+    local source = source
+    local user_id = vRP.getUserId(source)
+    if not user_id then return end
+
+    local inv = vRP.getInventory(user_id)
+    if not inv or not inv[slot] then
+        vRPclient.notify(source, "~r~Não há item no slot " .. slot .. ".")
+        return
+    end
+
+    -- Chama a função de usar item que já existe
+    -- Usamos 1 como a quantidade padrão para o atalho
+    local result = RegisterTunnel.useItem(slot, 1)
+
+    -- A função useItem retorna uma tabela com 'error' ou 'success'
+    if result then
+        if result.error then
+            vRPclient.notify(source, "~r~" .. result.error)
+        elseif result.success then
+            vRPclient.notify(source, "~g~" .. result.success)
+            -- Informa ao cliente para atualizar o inventário na tela
+            TriggerClientEvent("inventory:update", source)
+        end
+    else
+        -- Notificação genérica caso a função não retorne nada
+        vRPclient.notify(source, "~r~Não foi possível usar o item.")
+    end
+end)
+
 
 RegisterTunnel.emitCloseListeners = function()
     local source = source
@@ -1532,6 +1563,9 @@ RegisterServerEvent("updateVehList")
 AddEventHandler("updateVehList", function(list) 
     vehList = list
 end)
+
+
+
 
 -----------------------------------------------------------------------------------------------------------------------------------------
 -- REPARAR

@@ -54,8 +54,25 @@ end)
 CreateThread(function() 
     RegisterKeyMapping("abrirmochilanikito","Abrir a mochila","keyboard","OEM_3")
     RegisterKeyMapping("openchest","Trunkchest Open","keyboard","PAGEUP")
+
+    -- Atalhos do inventário (Versão Corrigida)
+    for i = 1, 5 do
+        RegisterCommand("+inventory:hotkey" .. i, function()
+            -- Apenas informa ao servidor que a tecla foi pressionada
+            TriggerServerEvent("imperio_inventory:useItemFromHotkey", tostring(i))
+        end, false)
+        RegisterCommand("-inventory:hotkey" .. i, function() end, false)
+        RegisterKeyMapping("+inventory:hotkey" .. i, "Atalho do Inventário " .. i, "keyboard", tostring(i))
+    end
 end)
 
+-- Este evento é chamado pelo servidor para forçar a atualização da UI
+RegisterNetEvent("inventory:update")
+AddEventHandler("inventory:update", function()
+    if IsNuiFocused() then
+        SendNUIMessage({route = "FORCE_UPDATE_INVENTORY"})
+    end
+end)
 
 
 

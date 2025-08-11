@@ -348,6 +348,25 @@ class Inventory {
             },
         });
 
+        $('.slot-item').on('contextmenu', function(event) {
+            event.preventDefault();
+            const side = $(this).data('side');
+            const itemId = $(this).data('id');
+            const invInstance = window.classInstances[side];
+            if (invInstance) {
+                invInstance.selectItem(side, itemId);
+                const contextMenu = $('#context-menu');
+                
+                // Linha alterada para posicionamento correto
+                contextMenu.css({ top: event.pageY + 'px', left: event.pageX + 'px' }).show();
+
+                // Hide the menu when clicking elsewhere
+                $(document).one('click', function() {
+                    contextMenu.hide();
+                });
+            }
+        });
+
         $(`.empty`).draggable({
             disabled: true
         });
